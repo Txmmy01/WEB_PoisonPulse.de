@@ -25,6 +25,7 @@
     if (!target) return;
     const {data} = await db.from("advent_calendar").select("day,title,content").eq("published",true).lte("reveal_at",new Date().toISOString().slice(0,10)).order("day");
     if (!data?.length) return;
+    data.forEach(d => { const door = document.querySelectorAll(".calendar-day")[d.day - 1]; if (door) door.innerHTML = String(d.day).padStart(2,"0") + "<span>OPEN</span>"; });
     target.innerHTML = data.map(d => `<article class="news-item"><span class="date">TÜRCHEN ${d.day}</span><strong>${esc(d.title)}</strong><p>${esc(d.content)}</p></article>`).join("");
   }
   const form = document.querySelector("[data-application-form]");
