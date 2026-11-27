@@ -92,9 +92,8 @@ app.post("/api/applications", applicationLimiter, (req,res) => {
 app.post("/api/login", loginLimiter, async (req,res) => {
  const username=clean(req.body.username,80), password=String(req.body.password||"");
  const expectedUser=process.env.ADMIN_USERNAME;
- const expectedHash=await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
  const userOk=username===expectedUser;
- const passOk=await bcrypt.compare(password, expectedHash);
+ const passOk=await bcrypt.compare(password, adminPasswordHash);
  if(!userOk || !passOk) return res.status(401).json({error:"Benutzername oder Passwort falsch."});
  req.session.regenerate(err => {
   if(err) return res.status(500).json({error:"Login fehlgeschlagen."});
