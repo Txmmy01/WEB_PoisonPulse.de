@@ -104,6 +104,7 @@ app.post("/api/login", loginLimiter, async (req,res) => {
 });
 app.get("/api/session",(req,res)=>res.json({authenticated:!!req.session?.admin}));
 app.post("/api/logout",admin,(req,res)=>req.session.destroy(()=>{res.clearCookie("pp.sid",{httpOnly:true,sameSite:"strict"});res.json({ok:true});}));
+app.get("/api/admin/applications",admin,(req,res)=>res.json(db.prepare("SELECT * FROM applications ORDER BY created_at DESC").all()));
 app.get("/api/admin/:kind",admin,(req,res)=>{
  const table=tables[req.params.kind]; if(!table)return res.sendStatus(404);
  const order=req.params.kind==="news"||req.params.kind==="applications"?"created_at DESC":"id DESC";
@@ -134,7 +135,6 @@ app.patch("/api/admin/applications/:id",admin,(req,res)=>{
  if(!["new","reviewing","accepted","declined"].includes(status))return res.status(400).json({error:"Ungültiger Status."});
  db.prepare("UPDATE applications SET status=? WHERE id=?").run(status,Number(req.params.id));res.json({ok:true});
 });
-app.get("/api/admin/applications",admin,(req,res)=>res.json(db.prepare("SELECT * FROM applications ORDER BY created_at DESC").all()));
 
 app.use((req,res,next)=>{
  const requested=path.resolve(__dirname, "." + req.path);
