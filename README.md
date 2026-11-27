@@ -100,7 +100,7 @@ sudo apt update
 sudo apt install -y nodejs npm nginx sqlite3
 sudo adduser --system --group --home /opt/poisonpulse poisonpulse
 sudo mkdir -p /opt/poisonpulse /var/lib/poisonpulse /var/backups/poisonpulse
-sudo chown -R poisonpulse:poisonpulse /opt/poisonpulse /var/lib/poisonpulse
+sudo chown -R poisonpulse:poisonpulse /opt/poisonpulse /var/lib/poisonpulse /var/backups/poisonpulse
 sudo chmod 700 /var/lib/poisonpulse
 ```
 
