@@ -85,6 +85,50 @@ Achte darauf, dass `www-data` Schreibrechte auf den in `DATA_DIR` gesetzten Ordn
 - Admin-Login ist durch Rate-Limit begrenzt; Session-Cookie ist HttpOnly und SameSite Strict.
 - Für Produktion HTTPS über Reverse Proxy verwenden.
 
+## Debian 13: systemd, Nginx und Backups
+
+Beispiel-Konfigurationen liegen unter `deploy/` und `scripts/`:
+
+- `deploy/poisonpulse.service.example` – systemd-Dienst mit eingeschränkten Rechten
+- `deploy/nginx-poisonpulse.conf.example` – Reverse Proxy für Nginx
+- `scripts/backup.sh` – konsistente SQLite-Backups inklusive Session-Datenbank
+
+Für einen eigenen Linux-Dienstbenutzer und die Verzeichnisse:
+
+```bash
+sudo apt update
+sudo apt install -y nodejs npm nginx sqlite3
+sudo adduser --system --group --home /opt/poisonpulse poisonpulse
+sudo mkdir -p /opt/poisonpulse /var/lib/poisonpulse /var/backups/poisonpulse
+sudo chown -R poisonpulse:poisonpulse /opt/poisonpulse /var/lib/poisonpulse
+sudo chmod 700 /var/lib/poisonpulse
+```
+
+Repository nach `/opt/poisonpulse` deployen, dort `npm ci --omit=dev` ausführen und die Datei `.env` mit restriktiven Rechten ablegen (`chown root:poisonpulse .env && chmod 640 .env`). Den Dienstbenutzer `poisonpulse` für `DATA_DIR` schreibberechtigen.
+
+Die Beispiel-Service-Datei nach `/etc/systemd/system/poisonpulse.service` kopieren, Pfade bei Bedarf anpassen und aktivieren:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now poisonpulse
+sudo systemctl status poisonpulse
+```
+
+Nginx-Beispiel nach `/etc/nginx/sites-available/poisonpulse` kopieren, Domain einsetzen, aktivieren und danach HTTPS mit Certbot einrichten:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/poisonpulse /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Backups manuell ausführen:
+
+```bash
+sudo -u poisonpulse DATA_DIR=/var/lib/poisonpulse BACKUP_DIR=/var/backups/poisonpulse bash scripts/backup.sh
+```
+
+Für produktiven Betrieb zusätzlich regelmäßige externe/off-server Backups einrichten.
+
 ## Lokal testen
 
 ```bash
