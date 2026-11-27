@@ -1,0 +1,21 @@
+[Unit]
+Description=PoisonPulse.de Node.js application
+After=network.target
+
+[Service]
+Type=simple
+User=poisonpulse
+Group=poisonpulse
+WorkingDirectory=/opt/poisonpulse
+EnvironmentFile=/opt/poisonpulse/.env
+ExecStart=/usr/bin/node /opt/poisonpulse/server.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/poisonpulse
+
+[Install]
+WantedBy=multi-user.target
