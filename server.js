@@ -136,7 +136,7 @@ app.patch("/api/admin/applications/:id",admin,(req,res)=>{
 });
 app.get("/api/admin/applications",admin,(req,res)=>res.json(db.prepare("SELECT * FROM applications ORDER BY created_at DESC").all()));
 
-app.use(express.static(path.join(__dirname)));
+app.use((req,res,next)=>{\n const requested=path.resolve(__dirname, "." + req.path);\n if(requested===dataDir || requested.startsWith(dataDir + path.sep)) return res.sendStatus(404);\n next();\n});\napp.use(express.static(path.join(__dirname)));
 app.get("*",(req,res)=>res.sendFile(path.join(__dirname,"index.html")));
 const port=Number(process.env.PORT||3000);
 app.listen(port,"0.0.0.0",()=>console.log(`PoisonPulse läuft auf Port ${port}; SQLite: ${path.join(dataDir,"poisonpulse.sqlite")}`));
