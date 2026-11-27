@@ -30,6 +30,7 @@
 <section class="section" id="community"><div class="wrap"><div class="join reveal"><div><div class="eyebrow">DON'T BE A STRANGER</div><h2>READY TO JOIN <span>THE PULSE?</span></h2><p>Ob du Minecraft feierst, den Clan kennenlernen oder einfach Teil der Community sein willst – auf unserem Discord bist du richtig.</p></div><a class="btn" href="https://discord.gg/pVQ78HjHXy" target="_blank" rel="noreferrer">JOIN DISCORD ↗</a></div></div></section>
 </main>
 <footer class="footer"><div class="wrap footer-inner"><a class="brand" href="#home">POISON<b>PULSE.</b></a><div class="socials"><a href="https://youtube.com/@poison-pulse?si=fTwcc97P5Dg9rVRv" target="_blank" rel="noreferrer">YOUTUBE</a><a href="https://twitch.tv/PoisonPulse" target="_blank" rel="noreferrer">TWITCH</a><a href="https://discord.gg/pVQ78HjHXy" target="_blank" rel="noreferrer">DISCORD</a><a href="admin/">ADMIN</a></div><p>© <span id="year"></span> PoisonPulse · Made for the community.</p></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.example.js"></script><script src="js/site.js"></script>
 <script>
 const root=document.documentElement;const saved=localStorage.getItem('pp-theme');if(saved)root.dataset.theme=saved;
 document.getElementById('theme').addEventListener('click',()=>{root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';localStorage.setItem('pp-theme',root.dataset.theme)});
