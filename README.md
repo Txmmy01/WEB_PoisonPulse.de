@@ -44,36 +44,7 @@ Voraussetzungen: Node.js 20 oder neuer und npm.
    ```
 7. Reverse Proxy (z. B. Nginx/Caddy) auf `127.0.0.1:3000` konfigurieren und HTTPS aktivieren. Die App bindet an `0.0.0.0`; den Node-Port nicht ungeschützt ins Internet freigeben.
 
-### Dauerbetrieb mit systemd (optional)
-
-Lege `/etc/systemd/system/poisonpulse.service` an (Pfade und Benutzer anpassen):
-
-```ini
-[Unit]
-Description=PoisonPulse Website
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/opt/poisonpulse
-EnvironmentFile=/opt/poisonpulse/.env
-ExecStart=/usr/bin/npm start
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Danach:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now poisonpulse
-sudo systemctl status poisonpulse
-```
-
-Achte darauf, dass `www-data` Schreibrechte auf den in `DATA_DIR` gesetzten Ordner hat.
+Für Debian 13 empfehlen wir die mitgelieferte systemd-Vorlage unter `deploy/poisonpulse.service.example`; siehe den Debian-13-Abschnitt weiter unten.
 
 ## Speicher & Sicherheit
 
