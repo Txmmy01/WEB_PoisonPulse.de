@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS advent_calendar (
 );
 `);
 
+const adminPasswordHash = bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10);
+
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", Number(process.env.TRUST_PROXY || 1));
