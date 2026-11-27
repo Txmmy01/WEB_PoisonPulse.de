@@ -2,61 +2,105 @@
 
 Creator- und Community-Website für PoisonPulse, HugoSMP und den **[POISN]**-Clan.
 
-## Website
+## Funktionen
 
 - Responsive Creator-Landingpage mit PoisonPulse-Branding und Logo
 - Umschaltbares Dark-/Light-Theme
 - Creator-Links: YouTube, Twitch und Discord
-- Clanbereich mit dynamischer Mitgliederliste
+- Dynamische Clan-Mitgliederliste
 - Öffentliches Bewerbungsformular
-- News-Bereich mit dynamischen Veröffentlichungen
+- News-Bereich
 - 24-Türchen-Adventskalender mit datumsabhängiger Freischaltung
 - Admin-Dashboard für News, Clanmitglieder, Bewerbungen und Adventskalender
+- Benutzername/Passwort-Login über serverseitige Umgebungsvariablen
+- SQLite-Datenbank für persistente Speicherung auf der KVM
 
-## Supabase einrichten (einmalig)
+## Deployment auf der KVM
 
-Die Website ist statisch hostbar. Für Login, Bewerbungen und dynamische Inhalte wird ein eigenes Supabase-Projekt benötigt.
+Voraussetzungen: Node.js 20 oder neuer und npm.
 
-1. Erstelle ein Projekt unter https://supabase.com/.
-2. Öffne im Supabase Dashboard den **SQL Editor** und führe den vollständigen Inhalt von `supabase/schema.sql` aus.
-3. Öffne **Project Settings → API** und kopiere die Project URL sowie den **anon/public key**.
-4. Öffne `config.example.js` im Repository und ersetze `YOUR_PROJECT_ID` und `YOUR_SUPABASE_ANON_KEY` durch diese Werte. Der anon key darf im Browser verwendet werden; niemals den `service_role` key eintragen.
-5. Lege unter **Authentication → Users** deinen Benutzer an (E-Mail/Passwort).
-6. Führe im SQL Editor den folgenden Befehl aus und ersetze die E-Mail-Adresse:
-   ```sql
-   insert into public.profiles (id, role)
-   select id, 'admin' from auth.users where email = 'DEINE-EMAIL@BEISPIEL.DE';
+1. Repository auf die KVM klonen und in den Projektordner wechseln.
+2. Abhängigkeiten installieren:
+   ```bash
+   npm install
    ```
-7. Öffne nach dem Deployment `/admin/` und melde dich mit diesem Benutzer an.
+3. Beispiel-Konfiguration kopieren:
+   ```bash
+   cp .env.example .env
+   ```
+4. `.env` bearbeiten. Setze einen eigenen Admin-Benutzernamen, ein starkes Passwort (mindestens 12 Zeichen) und einen langen zufälligen `SESSION_SECRET`. Beispiel für einen geheimen Schlüssel:
+   ```bash
+   openssl rand -hex 48
+   ```
+   Als `DATA_DIR` einen persistenten Ordner auf der KVM angeben, z. B. `/var/lib/poisonpulse`.
+5. Datenordner anlegen und dem Linux-Benutzer der App Schreibrechte geben:
+   ```bash
+   sudo mkdir -p /var/lib/poisonpulse
+   sudo chown -R $USER:$USER /var/lib/poisonpulse
+   ```
+6. Starten:
+   ```bash
+   npm start
+   ```
+7. Reverse Proxy (z. B. Nginx/Caddy) auf `127.0.0.1:3000` konfigurieren und HTTPS aktivieren. Die App bindet an `0.0.0.0`; den Node-Port nicht ungeschützt ins Internet freigeben.
 
-**Sicherheit:** Admin-Aktionen werden zusätzlich durch Supabase Row Level Security abgesichert. Das Frontend blendet das Dashboard ohne Admin-Profil aus; die Datenbankrichtlinien sind die eigentliche Zugriffskontrolle. Den service_role key niemals veröffentlichen.
+### Dauerbetrieb mit systemd (optional)
 
-## Lokal starten
+Lege `/etc/systemd/system/poisonpulse.service` an (Pfade und Benutzer anpassen):
 
-Öffne `index.html` direkt im Browser oder starte einen lokalen Webserver:
+```ini
+[Unit]
+Description=PoisonPulse Website
+After=network.target
 
-```bash
-python -m http.server 8000
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/poisonpulse
+EnvironmentFile=/opt/poisonpulse/.env
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-Danach http://localhost:8000 öffnen. Die Adminseite liegt unter http://localhost:8000/admin/.
+Danach:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now poisonpulse
+sudo systemctl status poisonpulse
+```
 
-## Veröffentlichung
+Achte darauf, dass `www-data` Schreibrechte auf den in `DATA_DIR` gesetzten Ordner hat.
 
-Repository mit GitHub Pages oder einem anderen statischen Webhoster verbinden. Als Veröffentlichungsordner das Repository-Root verwenden. Nach Eintragen der Supabase-Projektdaten funktionieren Login, News, Clanverwaltung, Bewerbungen und Kalender.
+## Speicher & Sicherheit
+
+- Inhalte und Bewerbungen liegen in `$DATA_DIR/poisonpulse.sqlite`.
+- Login-Sitzungen werden ebenfalls im Datenordner gespeichert.
+- `.env` enthält Zugangsdaten und darf niemals committet oder öffentlich geteilt werden.
+- `.env.example` enthält ausschließlich Platzhalter.
+- Backups: App stoppen oder SQLite-Backup mit `sqlite3`/Backup-Tool erstellen und den kompletten `DATA_DIR` sichern.
+- Admin-Login ist durch Rate-Limit begrenzt; Session-Cookie ist HttpOnly und SameSite Strict.
+- Für Produktion HTTPS über Reverse Proxy verwenden.
+
+## Lokal testen
+
+```bash
+npm install
+cp .env.example .env
+# .env ausfüllen
+npm start
+```
+
+Dann Website unter `http://localhost:3000` und Admin unter `http://localhost:3000/admin/` öffnen.
 
 ## Projektstruktur
 
 - `index.html` – öffentliche Website
 - `admin/index.html` – Admin-Dashboard
-- `js/site.js` – öffentliche Datenbankintegration
-- `config.example.js` – öffentliche Supabase-Konfiguration (Projekt-URL + anon key)
-- `supabase/schema.sql` – Tabellen und Row-Level-Security-Regeln
-
-## Hinweise
-
-- News werden erst nach dem Anlegen und Veröffentlichen im Adminbereich öffentlich angezeigt.
-- Clanmitglieder lassen sich im Adminbereich hinzufügen, bearbeiten, sortieren (Datenbankfeld `sort_order`) und ausblenden.
-- Bewerbungen sind nur für berechtigte Admins sichtbar.
-- Adventskalender-Inhalte werden erst am eingetragenen Datum angezeigt, wenn das Türchen veröffentlicht wurde.
-- Die Website enthält keine erfundenen Clanmitglieder oder News. PoisonPulse ist als Owner in der statischen Ausgangsansicht dargestellt.
+- `js/site.js` – öffentliche API-Anbindung
+- `server.js` – Express-Backend, Login und API
+- `.env.example` – sichere Vorlage für KVM-Umgebungsvariablen
+- `data/` – zur Laufzeit angelegte SQLite-Datenbank (nicht committen)
